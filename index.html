@@ -83,7 +83,7 @@
 
     /* ── Per-page layout ─────────────────────────────────────────────── */
     .page-group  { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
-    .page-header { display: flex; align-items: center; gap: 4px; }
+    .page-header { display: flex; align-items: center; gap: 4px; position: relative; z-index: 10; }
     .page-lbl    { font-size: 0.7rem; color: #556; margin-right: 2px; }
 
     .pg-btn {
@@ -104,7 +104,7 @@
     .pg-btn.danger:hover { background: #e94560; color: #fff; }
 
     /* ── Page canvas stack ───────────────────────────────────────────── */
-    .page-wrap { position: relative; box-shadow: 0 6px 24px rgba(0,0,0,0.6); overflow: hidden; }
+    .page-wrap { position: relative; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
     .pdf-c     { display: block; }
     .fab-hold  { position: absolute; top: 0; left: 0; }
 
