@@ -108,10 +108,9 @@
     .pdf-c     { display: block; }
     .fab-hold  { position: absolute; top: 0; left: 0; }
 
-    /* cursor in placement / crop modes */
+    /* cursor in placement modes */
     body.mode-text  .upper-canvas,
-    body.mode-image .upper-canvas,
-    body.mode-crop  .upper-canvas { cursor: crosshair !important; }
+    body.mode-image .upper-canvas { cursor: crosshair !important; }
 
     /* ── Spinner ─────────────────────────────────────────────────────── */
     #spinner { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; align-items: center; justify-content: center; }
@@ -131,7 +130,6 @@
   <button class="btn active" id="b-sel"  onclick="setMode('select')">Select</button>
   <button class="btn"        id="b-txt"  onclick="setMode('text')">Add Text</button>
   <button class="btn"        id="b-img"  onclick="document.getElementById('iimg').click()">Add Image</button>
-  <button class="btn"        id="b-crop" onclick="setMode('crop')">Crop Page</button>
   <input id="iimg" type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none">
 
   <div class="sep"></div>
@@ -187,7 +185,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 // ── state ──────────────────────────────────────────────────────────────────
 let pdfBytes  = null;
 let pdfJsDoc  = null;   // PDF.js doc — kept alive so pages can be re-rendered on rotate
-let pages     = [];     // { scale, rotation, crop, cropRect } per page
+let pages     = [];     // { scale, rotation } per page
 let fcs       = [];     // Fabric.Canvas per page
 
 let mode      = 'select';
@@ -197,24 +195,13 @@ let pendingImg = null;
 let tFont = 'Helvetica', tSize = 14, tColor = '#000000';
 let tBold = false, tItalic = false;
 
-// active crop draw (shared; only one page can be drawn at a time)
-let cropDraw = { active: false, startX: 0, startY: 0, rect: null, pageIdx: -1 };
-
 // ── mode ───────────────────────────────────────────────────────────────────
 function setMode(m) {
-  // abort any in-progress crop draw
-  if (cropDraw.active && cropDraw.rect && cropDraw.pageIdx >= 0) {
-    fcs[cropDraw.pageIdx].remove(cropDraw.rect);
-    fcs[cropDraw.pageIdx].renderAll();
-  }
-  cropDraw = { active: false, startX: 0, startY: 0, rect: null, pageIdx: -1 };
-
   mode = m;
   document.body.className = 'mode-' + m;
-  document.getElementById('b-sel').classList.toggle('active',  m === 'select');
-  document.getElementById('b-txt').classList.toggle('active',  m === 'text');
-  document.getElementById('b-img').classList.toggle('active',  m === 'image');
-  document.getElementById('b-crop').classList.toggle('active', m === 'crop');
+  document.getElementById('b-sel').classList.toggle('active', m === 'select');
+  document.getElementById('b-txt').classList.toggle('active', m === 'text');
+  document.getElementById('b-img').classList.toggle('active', m === 'image');
   fcs.forEach(c => { c.selection = (m === 'select'); });
 }
 
@@ -240,24 +227,21 @@ async function renderPDF() {
   pdfJsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
 
   for (let i = 0; i < pdfJsDoc.numPages; i++) {
-    pages.push({ scale: 1.5, rotation: 0, crop: null, cropRect: null });
+    pages.push({ scale: 1.5, rotation: 0 });
     const wrap = await buildPageDOM(i);
 
-    // per-page header with rotate & crop-clear buttons
+    // per-page header with rotate buttons
     const header  = el('div', { className: 'page-header' });
     const lbl     = el('span', { className: 'page-lbl', textContent: 'Page ' + (i + 1) });
-    const btnCCW  = el('button', { className: 'pg-btn', textContent: '↺', title: 'Rotate left' });
-    const btnCW   = el('button', { className: 'pg-btn', textContent: '↻', title: 'Rotate right' });
-    const btnClrC = el('button', { className: 'pg-btn danger', textContent: '✕ crop', title: 'Clear crop' });
-    btnClrC.style.display = 'none';
+    const btnCCW = el('button', { className: 'pg-btn', textContent: '↺', title: 'Rotate left' });
+    const btnCW  = el('button', { className: 'pg-btn', textContent: '↻', title: 'Rotate right' });
 
     ;(idx => {
-      btnCCW.onclick  = () => rotatePage(idx, 'ccw');
-      btnCW.onclick   = () => rotatePage(idx, 'cw');
-      btnClrC.onclick = () => clearCrop(idx);
+      btnCCW.onclick = () => rotatePage(idx, 'ccw');
+      btnCW.onclick  = () => rotatePage(idx, 'cw');
     })(i);
 
-    header.append(lbl, btnCCW, btnCW, btnClrC);
+    header.append(lbl, btnCCW, btnCW);
 
     const group = el('div', { className: 'page-group' });
     group.appendChild(header);
@@ -303,14 +287,14 @@ async function buildPageDOM(idx) {
 // ── rotate a page 90° and re-render ───────────────────────────────────────
 async function rotatePage(idx, dir) {
   pages[idx].rotation = ((pages[idx].rotation) + (dir === 'cw' ? 90 : -90) + 360) % 360;
-  // rotation changes geometry, so any existing crop is invalid
-  pages[idx].crop = null;
-  pages[idx].cropRect = null;
   await rerenderPage(idx);
 }
 
 // ── re-render a single page in place (after rotation) ─────────────────────
 async function rerenderPage(idx) {
+  // Fresh PDF.js doc each time — reusing the same doc across multiple rotations
+  // causes PDF.js internal render-state to get stuck on subsequent pages.
+  pdfJsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
   const pg = await pdfJsDoc.getPage(idx + 1);
   const { scale, rotation } = pages[idx];
   const vp = pg.getViewport({ scale, rotation });
@@ -331,25 +315,6 @@ async function rerenderPage(idx) {
   fc.setWidth(W); fc.setHeight(H);
   fc.clear();
   fc.renderAll();
-
-  setCropClearVisible(idx, false);
-}
-
-// ── crop helpers ───────────────────────────────────────────────────────────
-function clearCrop(idx) {
-  if (pages[idx].cropRect) fcs[idx].remove(pages[idx].cropRect);
-  pages[idx].crop = null;
-  pages[idx].cropRect = null;
-  fcs[idx].renderAll();
-  setCropClearVisible(idx, false);
-}
-
-function setCropClearVisible(idx, visible) {
-  const headers = document.querySelectorAll('.page-header');
-  if (!headers[idx]) return;
-  // children: [lbl, btnCCW, btnCW, btnClrC]
-  const btn = headers[idx].children[3];
-  if (btn) btn.style.display = visible ? 'inline-block' : 'none';
 }
 
 // ── per-canvas event wiring ────────────────────────────────────────────────
@@ -385,59 +350,7 @@ function attachEvents(fc, idx) {
         fc.add(img); fc.setActiveObject(img); fc.renderAll();
       });
       setMode('select');
-
-    // ── start crop draw ───────────────────────────────────────────────
-    } else if (mode === 'crop') {
-      const p = fc.getPointer(e.e);
-      // remove any previous in-progress draw on this canvas
-      if (cropDraw.rect && cropDraw.pageIdx === idx) fc.remove(cropDraw.rect);
-      const rect = new fabric.Rect({
-        left: p.x, top: p.y, width: 0, height: 0,
-        fill: 'rgba(0,0,0,0.15)',
-        stroke: '#e94560', strokeWidth: 2,
-        strokeDashArray: [8, 4],
-        selectable: false, evented: false,
-        isCropMarker: true,
-      });
-      fc.add(rect);
-      cropDraw = { active: true, startX: p.x, startY: p.y, rect, pageIdx: idx };
     }
-  });
-
-  // ── drag crop rectangle ───────────────────────────────────────────────
-  fc.on('mouse:move', e => {
-    if (mode !== 'crop' || !cropDraw.active || cropDraw.pageIdx !== idx) return;
-    const p = fc.getPointer(e.e);
-    cropDraw.rect.set({
-      left:   Math.min(p.x, cropDraw.startX),
-      top:    Math.min(p.y, cropDraw.startY),
-      width:  Math.abs(p.x - cropDraw.startX),
-      height: Math.abs(p.y - cropDraw.startY),
-    });
-    fc.renderAll();
-  });
-
-  // ── finish crop draw ──────────────────────────────────────────────────
-  fc.on('mouse:up', e => {
-    if (mode !== 'crop' || !cropDraw.active || cropDraw.pageIdx !== idx) return;
-    const p = fc.getPointer(e.e);
-    const w = Math.abs(p.x - cropDraw.startX);
-    const h = Math.abs(p.y - cropDraw.startY);
-    cropDraw.active = false;
-
-    if (w > 10 && h > 10) {
-      // remove previous crop marker for this page
-      if (pages[idx].cropRect) fc.remove(pages[idx].cropRect);
-      pages[idx].crop    = { left: Math.min(p.x, cropDraw.startX), top: Math.min(p.y, cropDraw.startY), width: w, height: h };
-      pages[idx].cropRect = cropDraw.rect;
-      setCropClearVisible(idx, true);
-    } else {
-      fc.remove(cropDraw.rect);
-    }
-
-    cropDraw.rect = null;
-    fc.renderAll();
-    setMode('select');
   });
 
   fc.on('selection:created', e => syncToolbar(e.selected[0]));
@@ -515,23 +428,14 @@ async function exportPDF() {
     for (let i = 0; i < fcs.length; i++) {
       const fc    = fcs[i];
       const pdfPg = pdfPages[i];
-      const { scale, rotation, crop } = pages[i];
+      const { scale, rotation } = pages[i];
       const pH    = pdfPg.getHeight();
 
       // ── rotation ───────────────────────────────────────────────────
       if (rotation) pdfPg.setRotation(degrees(rotation));
 
-      // ── crop (sets PDF CropBox in page user-space coords) ──────────
-      if (crop) {
-        const cx = crop.left / scale;
-        const cy = pH - (crop.top + crop.height) / scale;
-        const cw = crop.width  / scale;
-        const ch = crop.height / scale;
-        pdfPg.setCropBox(cx, cy, cw, ch);
-      }
-
-      // ── overlay objects (skip crop markers) ────────────────────────
-      for (const obj of fc.getObjects().filter(o => !o.isCropMarker)) {
+      // ── overlay objects ────────────────────────────────────────────
+      for (const obj of fc.getObjects()) {
 
         if (obj.type === 'i-text' || obj.type === 'text') {
           const font  = await doc.embedFont(resolveFont(obj.fontFamily, obj.fontWeight, obj.fontStyle));
