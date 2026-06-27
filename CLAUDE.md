@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Single-file browser-based PDF editor. No build step, no dependencies to install. Open `index.html` directly in a browser or serve it via GitHub Pages at `https://jingzhi22.github.io/pdf-editor/`.
 
-`index.html` and `pdfeditor.html` are identical — keep them in sync. `index.html` is what GitHub Pages serves; `pdfeditor.html` is the local working copy.
+`index.html` is the only file. GitHub Pages serves it at the repo root; open it directly in a browser for local development.
 
 ## Architecture
 
