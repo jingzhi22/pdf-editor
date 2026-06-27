@@ -29,9 +29,7 @@
       flex-shrink: 0;
       z-index: 100;
     }
-
     .sep { width: 1px; height: 28px; background: #0f3460; margin: 0 4px; flex-shrink: 0; }
-
     .btn {
       padding: 5px 13px;
       border: 1px solid #2a4a7a;
@@ -45,9 +43,9 @@
       white-space: nowrap;
       user-select: none;
     }
-    .btn:hover { background: #1a4a8a; border-color: #a8d8ea; color: #fff; }
+    .btn:hover  { background: #1a4a8a; border-color: #a8d8ea; color: #fff; }
     .btn.active { background: #e94560; border-color: #e94560; color: #fff; }
-    .btn.dl { background: transparent; border-color: #e94560; color: #e94560; }
+    .btn.dl     { background: transparent; border-color: #e94560; color: #e94560; }
     .btn.dl:hover { background: #e94560; color: #fff; }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 
@@ -62,17 +60,11 @@
       font-family: inherit;
     }
     select:focus { outline: 1px solid #a8d8ea; }
-
     input[type="color"] {
-      padding: 2px 3px;
-      width: 38px;
-      height: 30px;
-      border: 1px solid #2a4a7a;
-      border-radius: 6px;
-      background: #0f3460;
-      cursor: pointer;
+      padding: 2px 3px; width: 38px; height: 30px;
+      border: 1px solid #2a4a7a; border-radius: 6px;
+      background: #0f3460; cursor: pointer;
     }
-
     .lbl { font-size: 0.72rem; color: #778; white-space: nowrap; }
 
     /* ── Viewer ──────────────────────────────────────────────────────── */
@@ -85,56 +77,46 @@
       padding: 28px 16px 60px;
       gap: 28px;
     }
-
-    #empty {
-      margin-top: 100px;
-      text-align: center;
-      color: #555;
-    }
+    #empty { margin-top: 100px; text-align: center; color: #555; }
     #empty h2 { font-size: 1.4rem; margin-bottom: 8px; color: #666; }
     #empty p  { font-size: 0.9rem; }
 
-    .page-group {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 5px;
+    /* ── Per-page layout ─────────────────────────────────────────────── */
+    .page-group  { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+    .page-header { display: flex; align-items: center; gap: 4px; }
+    .page-lbl    { font-size: 0.7rem; color: #556; margin-right: 2px; }
+
+    .pg-btn {
+      padding: 1px 7px;
+      border: 1px solid #2a4a7a;
+      background: #0f3460;
+      color: #aaa;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      line-height: 1.7;
+      user-select: none;
+      transition: background 0.12s;
     }
+    .pg-btn:hover { background: #1a4a8a; color: #fff; border-color: #a8d8ea; }
+    .pg-btn.danger       { color: #e94560; border-color: #e94560; }
+    .pg-btn.danger:hover { background: #e94560; color: #fff; }
 
-    .page-lbl { font-size: 0.7rem; color: #556; margin-left: 2px; }
+    /* ── Page canvas stack ───────────────────────────────────────────── */
+    .page-wrap { position: relative; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+    .pdf-c     { display: block; }
+    .fab-hold  { position: absolute; top: 0; left: 0; }
 
-    .page-wrap {
-      position: relative;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
-    }
-
-    .pdf-c { display: block; }
-
-    .fab-hold { position: absolute; top: 0; left: 0; }
-
-    /* crosshair cursor in placement modes */
+    /* cursor in placement / crop modes */
     body.mode-text  .upper-canvas,
-    body.mode-image .upper-canvas { cursor: crosshair !important; }
+    body.mode-image .upper-canvas,
+    body.mode-crop  .upper-canvas { cursor: crosshair !important; }
 
     /* ── Spinner ─────────────────────────────────────────────────────── */
-    #spinner {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.55);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-    }
+    #spinner { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 999; align-items: center; justify-content: center; }
     #spinner.on { display: flex; }
-    #spin-box {
-      background: #16213e;
-      border: 1px solid #0f3460;
-      border-radius: 10px;
-      padding: 20px 40px;
-      color: #a8d8ea;
-      font-size: 1rem;
-    }
+    #spin-box { background: #16213e; border: 1px solid #0f3460; border-radius: 10px; padding: 20px 40px; color: #a8d8ea; font-size: 1rem; }
   </style>
 </head>
 <body class="mode-select">
@@ -146,9 +128,10 @@
 
   <div class="sep"></div>
 
-  <button class="btn active" id="b-sel" onclick="setMode('select')">Select</button>
-  <button class="btn"        id="b-txt" onclick="setMode('text')">Add Text</button>
-  <button class="btn"        id="b-img" onclick="document.getElementById('iimg').click()">Add Image</button>
+  <button class="btn active" id="b-sel"  onclick="setMode('select')">Select</button>
+  <button class="btn"        id="b-txt"  onclick="setMode('text')">Add Text</button>
+  <button class="btn"        id="b-img"  onclick="document.getElementById('iimg').click()">Add Image</button>
+  <button class="btn"        id="b-crop" onclick="setMode('crop')">Crop Page</button>
   <input id="iimg" type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none">
 
   <div class="sep"></div>
@@ -186,10 +169,7 @@
 
 <!-- ── Viewer ──────────────────────────────────────────────────────────── -->
 <div id="viewer">
-  <div id="empty">
-    <h2>No PDF loaded</h2>
-    <p>Click "Upload PDF" to get started</p>
-  </div>
+  <div id="empty"><h2>No PDF loaded</h2><p>Click "Upload PDF" to get started</p></div>
 </div>
 
 <!-- ── Spinner ─────────────────────────────────────────────────────────── -->
@@ -205,147 +185,259 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // ── state ──────────────────────────────────────────────────────────────────
-let pdfBytes    = null;
-let pages       = [];   // { scale, pdfH } per page (pdfH in PDF points)
-let fcs         = [];   // Fabric.Canvas per page
+let pdfBytes  = null;
+let pdfJsDoc  = null;   // PDF.js doc — kept alive so pages can be re-rendered on rotate
+let pages     = [];     // { scale, rotation, crop, cropRect } per page
+let fcs       = [];     // Fabric.Canvas per page
 
-let mode        = 'select';
-let pendingImg  = null; // data URL of image to place next
+let mode      = 'select';
+let pendingImg = null;
 
-// current text style (used when creating new text objects)
-let tFont  = 'Helvetica', tSize = 14, tColor = '#000000';
-let tBold  = false, tItalic = false;
+// text style state
+let tFont = 'Helvetica', tSize = 14, tColor = '#000000';
+let tBold = false, tItalic = false;
+
+// active crop draw (shared; only one page can be drawn at a time)
+let cropDraw = { active: false, startX: 0, startY: 0, rect: null, pageIdx: -1 };
 
 // ── mode ───────────────────────────────────────────────────────────────────
 function setMode(m) {
+  // abort any in-progress crop draw
+  if (cropDraw.active && cropDraw.rect && cropDraw.pageIdx >= 0) {
+    fcs[cropDraw.pageIdx].remove(cropDraw.rect);
+    fcs[cropDraw.pageIdx].renderAll();
+  }
+  cropDraw = { active: false, startX: 0, startY: 0, rect: null, pageIdx: -1 };
+
   mode = m;
   document.body.className = 'mode-' + m;
-  document.getElementById('b-sel').classList.toggle('active', m === 'select');
-  document.getElementById('b-txt').classList.toggle('active', m === 'text');
-  document.getElementById('b-img').classList.toggle('active', m === 'image');
+  document.getElementById('b-sel').classList.toggle('active',  m === 'select');
+  document.getElementById('b-txt').classList.toggle('active',  m === 'text');
+  document.getElementById('b-img').classList.toggle('active',  m === 'image');
+  document.getElementById('b-crop').classList.toggle('active', m === 'crop');
   fcs.forEach(c => { c.selection = (m === 'select'); });
 }
 
 // ── PDF upload ─────────────────────────────────────────────────────────────
 document.getElementById('ipdf').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   e.target.value = '';
   spin(true);
   try {
     pdfBytes = new Uint8Array(await file.arrayBuffer());
     await renderPDF();
-  } catch (err) {
-    alert('Failed to load PDF: ' + err.message);
-    console.error(err);
-  }
+  } catch (err) { alert('Failed to load PDF: ' + err.message); console.error(err); }
   spin(false);
 });
 
-// ── render all PDF pages ───────────────────────────────────────────────────
+// ── render all pages ───────────────────────────────────────────────────────
 async function renderPDF() {
-  fcs.forEach(c => c.dispose());
-  fcs = []; pages = [];
+  fcs.forEach(c => c.dispose()); fcs = []; pages = [];
+  document.getElementById('viewer').innerHTML = '';
 
-  const viewer = document.getElementById('viewer');
-  viewer.innerHTML = '';
+  // Pass a copy to PDF.js — it transfers the ArrayBuffer to its worker (detaching the original).
+  // Keeping pdfBytes intact lets pdf-lib read it on export.
+  pdfJsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
 
-  // Pass a copy to PDF.js — it transfers the ArrayBuffer to a worker (detaching the original).
-  // Keeping pdfBytes intact lets pdf-lib read it later on export.
-  const pdfDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
+  for (let i = 0; i < pdfJsDoc.numPages; i++) {
+    pages.push({ scale: 1.5, rotation: 0, crop: null, cropRect: null });
+    const wrap = await buildPageDOM(i);
 
-  for (let i = 0; i < pdfDoc.numPages; i++) {
-    const pg     = await pdfDoc.getPage(i + 1);
-    const SCALE  = 1.5;
-    const vp     = pg.getViewport({ scale: SCALE });
-    const W      = Math.floor(vp.width);
-    const H      = Math.floor(vp.height);
+    // per-page header with rotate & crop-clear buttons
+    const header  = el('div', { className: 'page-header' });
+    const lbl     = el('span', { className: 'page-lbl', textContent: 'Page ' + (i + 1) });
+    const btnCCW  = el('button', { className: 'pg-btn', textContent: '↺', title: 'Rotate left' });
+    const btnCW   = el('button', { className: 'pg-btn', textContent: '↻', title: 'Rotate right' });
+    const btnClrC = el('button', { className: 'pg-btn danger', textContent: '✕ crop', title: 'Clear crop' });
+    btnClrC.style.display = 'none';
 
-    // group div (label + page)
-    const group  = el('div',    { className: 'page-group' });
-    const lbl    = el('div',    { className: 'page-lbl', textContent: 'Page ' + (i + 1) });
-    const wrap   = el('div',    { className: 'page-wrap' });
-    const pdfC   = el('canvas', { className: 'pdf-c', width: W, height: H });
-    const hold   = el('div',    { className: 'fab-hold' });
-    const fabC   = el('canvas', { id: 'fc' + i, width: W, height: H });
+    ;(idx => {
+      btnCCW.onclick  = () => rotatePage(idx, 'ccw');
+      btnCW.onclick   = () => rotatePage(idx, 'cw');
+      btnClrC.onclick = () => clearCrop(idx);
+    })(i);
 
-    wrap.style.width  = W + 'px';
-    wrap.style.height = H + 'px';
+    header.append(lbl, btnCCW, btnCW, btnClrC);
 
-    hold.appendChild(fabC);
-    wrap.appendChild(pdfC);
-    wrap.appendChild(hold);
-    group.appendChild(lbl);
+    const group = el('div', { className: 'page-group' });
+    group.appendChild(header);
     group.appendChild(wrap);
-    viewer.appendChild(group);
-
-    // render PDF page onto background canvas
-    await pg.render({ canvasContext: pdfC.getContext('2d'), viewport: vp }).promise;
-
-    // create Fabric canvas on top
-    const fc = new fabric.Canvas('fc' + i, {
-      width: W, height: H,
-      selection: true,
-      preserveObjectStacking: true,
-    });
-
-    // store page metadata for coordinate conversion on export
-    pages.push({
-      scale: SCALE,
-      pdfH:  pg.getViewport({ scale: 1 }).height,
-    });
-
-    attachEvents(fc);
-    fcs.push(fc);
+    document.getElementById('viewer').appendChild(group);
   }
 
   document.getElementById('b-dl').disabled = false;
   setMode('select');
 }
 
+// ── build one page's DOM + Fabric canvas ───────────────────────────────────
+async function buildPageDOM(idx) {
+  const pg   = await pdfJsDoc.getPage(idx + 1);
+  const { scale, rotation } = pages[idx];
+  const vp   = pg.getViewport({ scale, rotation });
+  const W    = Math.floor(vp.width);
+  const H    = Math.floor(vp.height);
+
+  const wrap = el('div', { className: 'page-wrap' });
+  const pdfC = el('canvas', { className: 'pdf-c', id: 'pdfC-' + idx, width: W, height: H });
+  const hold = el('div', { className: 'fab-hold' });
+  const fabC = el('canvas', { id: 'fc' + idx, width: W, height: H });
+
+  wrap.style.width  = W + 'px';
+  wrap.style.height = H + 'px';
+  hold.appendChild(fabC);
+  wrap.appendChild(pdfC);
+  wrap.appendChild(hold);
+
+  await pg.render({ canvasContext: pdfC.getContext('2d'), viewport: vp }).promise;
+
+  const fc = new fabric.Canvas('fc' + idx, {
+    width: W, height: H,
+    selection: true,
+    preserveObjectStacking: true,
+  });
+  fcs[idx] = fc;
+  attachEvents(fc, idx);
+  return wrap;
+}
+
+// ── rotate a page 90° and re-render ───────────────────────────────────────
+async function rotatePage(idx, dir) {
+  pages[idx].rotation = ((pages[idx].rotation) + (dir === 'cw' ? 90 : -90) + 360) % 360;
+  // rotation changes geometry, so any existing crop is invalid
+  pages[idx].crop = null;
+  pages[idx].cropRect = null;
+  await rerenderPage(idx);
+}
+
+// ── re-render a single page in place (after rotation) ─────────────────────
+async function rerenderPage(idx) {
+  const pg = await pdfJsDoc.getPage(idx + 1);
+  const { scale, rotation } = pages[idx];
+  const vp = pg.getViewport({ scale, rotation });
+  const W  = Math.floor(vp.width);
+  const H  = Math.floor(vp.height);
+
+  // re-draw PDF background
+  const pdfC = document.getElementById('pdfC-' + idx);
+  pdfC.width = W; pdfC.height = H;
+  await pg.render({ canvasContext: pdfC.getContext('2d'), viewport: vp }).promise;
+
+  // resize page-wrap wrapper
+  const wrap = pdfC.closest('.page-wrap');
+  wrap.style.width = W + 'px'; wrap.style.height = H + 'px';
+
+  // resize & clear Fabric overlay
+  const fc = fcs[idx];
+  fc.setWidth(W); fc.setHeight(H);
+  fc.clear();
+  fc.renderAll();
+
+  setCropClearVisible(idx, false);
+}
+
+// ── crop helpers ───────────────────────────────────────────────────────────
+function clearCrop(idx) {
+  if (pages[idx].cropRect) fcs[idx].remove(pages[idx].cropRect);
+  pages[idx].crop = null;
+  pages[idx].cropRect = null;
+  fcs[idx].renderAll();
+  setCropClearVisible(idx, false);
+}
+
+function setCropClearVisible(idx, visible) {
+  const headers = document.querySelectorAll('.page-header');
+  if (!headers[idx]) return;
+  // children: [lbl, btnCCW, btnCW, btnClrC]
+  const btn = headers[idx].children[3];
+  if (btn) btn.style.display = visible ? 'inline-block' : 'none';
+}
+
 // ── per-canvas event wiring ────────────────────────────────────────────────
-function attachEvents(fc) {
+function attachEvents(fc, idx) {
   fc.on('mouse:down', e => {
+    // ── place text ────────────────────────────────────────────────────
     if (mode === 'text') {
-      // clicking an existing text object → just select it
       if (e.target) { setMode('select'); return; }
-      const p = fc.getPointer(e.e);
+      const p   = fc.getPointer(e.e);
       const obj = new fabric.IText('Text', {
         left: p.x, top: p.y,
-        fontFamily:  tFont,
-        fontSize:    tSize,
-        fill:        tColor,
-        fontWeight:  tBold   ? 'bold'   : 'normal',
-        fontStyle:   tItalic ? 'italic' : 'normal',
-        lineHeight:  1.2,
-        editable:    true,
+        fontFamily: tFont, fontSize: tSize, fill: tColor,
+        fontWeight: tBold   ? 'bold'   : 'normal',
+        fontStyle:  tItalic ? 'italic' : 'normal',
+        lineHeight: 1.2, editable: true,
       });
       fc.add(obj);
       fc.setActiveObject(obj);
-      obj.enterEditing();
-      obj.selectAll();
+      obj.enterEditing(); obj.selectAll();
       fc.renderAll();
       setMode('select');
+
+    // ── place image ───────────────────────────────────────────────────
     } else if (mode === 'image' && pendingImg) {
       if (e.target) { setMode('select'); return; }
-      const p   = fc.getPointer(e.e);
-      const src = pendingImg;
-      pendingImg = null;
+      const p = fc.getPointer(e.e);
+      const src = pendingImg; pendingImg = null;
       fabric.Image.fromURL(src, img => {
-        // auto-scale large images to at most 50 % of canvas width
         const maxW = fc.width * 0.5;
-        if (img.width > maxW) {
-          const r = maxW / img.width;
-          img.scaleX = r; img.scaleY = r;
-        }
+        if (img.width > maxW) { const r = maxW / img.width; img.scaleX = r; img.scaleY = r; }
         img.set({ left: p.x, top: p.y });
-        img.imageData = src; // store for export
-        fc.add(img);
-        fc.setActiveObject(img);
-        fc.renderAll();
+        img.imageData = src;
+        fc.add(img); fc.setActiveObject(img); fc.renderAll();
       });
       setMode('select');
+
+    // ── start crop draw ───────────────────────────────────────────────
+    } else if (mode === 'crop') {
+      const p = fc.getPointer(e.e);
+      // remove any previous in-progress draw on this canvas
+      if (cropDraw.rect && cropDraw.pageIdx === idx) fc.remove(cropDraw.rect);
+      const rect = new fabric.Rect({
+        left: p.x, top: p.y, width: 0, height: 0,
+        fill: 'rgba(0,0,0,0.15)',
+        stroke: '#e94560', strokeWidth: 2,
+        strokeDashArray: [8, 4],
+        selectable: false, evented: false,
+        isCropMarker: true,
+      });
+      fc.add(rect);
+      cropDraw = { active: true, startX: p.x, startY: p.y, rect, pageIdx: idx };
     }
+  });
+
+  // ── drag crop rectangle ───────────────────────────────────────────────
+  fc.on('mouse:move', e => {
+    if (mode !== 'crop' || !cropDraw.active || cropDraw.pageIdx !== idx) return;
+    const p = fc.getPointer(e.e);
+    cropDraw.rect.set({
+      left:   Math.min(p.x, cropDraw.startX),
+      top:    Math.min(p.y, cropDraw.startY),
+      width:  Math.abs(p.x - cropDraw.startX),
+      height: Math.abs(p.y - cropDraw.startY),
+    });
+    fc.renderAll();
+  });
+
+  // ── finish crop draw ──────────────────────────────────────────────────
+  fc.on('mouse:up', e => {
+    if (mode !== 'crop' || !cropDraw.active || cropDraw.pageIdx !== idx) return;
+    const p = fc.getPointer(e.e);
+    const w = Math.abs(p.x - cropDraw.startX);
+    const h = Math.abs(p.y - cropDraw.startY);
+    cropDraw.active = false;
+
+    if (w > 10 && h > 10) {
+      // remove previous crop marker for this page
+      if (pages[idx].cropRect) fc.remove(pages[idx].cropRect);
+      pages[idx].crop    = { left: Math.min(p.x, cropDraw.startX), top: Math.min(p.y, cropDraw.startY), width: w, height: h };
+      pages[idx].cropRect = cropDraw.rect;
+      setCropClearVisible(idx, true);
+    } else {
+      fc.remove(cropDraw.rect);
+    }
+
+    cropDraw.rect = null;
+    fc.renderAll();
+    setMode('select');
   });
 
   fc.on('selection:created', e => syncToolbar(e.selected[0]));
@@ -356,8 +448,7 @@ function attachEvents(fc) {
 function syncToolbar(obj) {
   if (!obj || obj.type !== 'i-text') return;
   document.getElementById('s-font').value  = obj.fontFamily || tFont;
-  const sz = document.getElementById('s-size');
-  sz.value = String(obj.fontSize || tSize);
+  document.getElementById('s-size').value  = String(obj.fontSize || tSize);
   document.getElementById('s-color').value = toHex(obj.fill) || '#000000';
   tBold   = obj.fontWeight === 'bold';
   tItalic = obj.fontStyle  === 'italic';
@@ -365,18 +456,15 @@ function syncToolbar(obj) {
   document.getElementById('b-ital').classList.toggle('active', tItalic);
 }
 
-// ── toolbar control handlers ───────────────────────────────────────────────
+// ── toolbar style controls ─────────────────────────────────────────────────
 document.getElementById('s-font').addEventListener('change', e => {
-  tFont = e.target.value;
-  applyToActive(o => o.set('fontFamily', tFont));
+  tFont = e.target.value; applyToActive(o => o.set('fontFamily', tFont));
 });
 document.getElementById('s-size').addEventListener('change', e => {
-  tSize = parseInt(e.target.value);
-  applyToActive(o => o.set('fontSize', tSize));
+  tSize = parseInt(e.target.value); applyToActive(o => o.set('fontSize', tSize));
 });
 document.getElementById('s-color').addEventListener('input', e => {
-  tColor = e.target.value;
-  applyToActive(o => o.set('fill', tColor));
+  tColor = e.target.value; applyToActive(o => o.set('fill', tColor));
 });
 
 function toggleStyle(type) {
@@ -398,7 +486,7 @@ function applyToActive(fn) {
   }
 }
 
-// ── delete ─────────────────────────────────────────────────────────────────
+// ── delete selected object ─────────────────────────────────────────────────
 function deleteSelected() {
   for (const fc of fcs) {
     const o = fc.getActiveObject();
@@ -406,17 +494,16 @@ function deleteSelected() {
   }
 }
 
-// ── image upload ───────────────────────────────────────────────────────────
+// ── image file input ───────────────────────────────────────────────────────
 document.getElementById('iimg').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   e.target.value = '';
   const r = new FileReader();
   r.onload = ev => { pendingImg = ev.target.result; setMode('image'); };
   r.readAsDataURL(file);
 });
 
-// ── PDF export ─────────────────────────────────────────────────────────────
+// ── export / download ──────────────────────────────────────────────────────
 async function exportPDF() {
   if (!pdfBytes) return;
   spin(true);
@@ -428,56 +515,52 @@ async function exportPDF() {
     for (let i = 0; i < fcs.length; i++) {
       const fc    = fcs[i];
       const pdfPg = pdfPages[i];
-      const { scale } = pages[i];
+      const { scale, rotation, crop } = pages[i];
       const pH    = pdfPg.getHeight();
 
-      for (const obj of fc.getObjects()) {
+      // ── rotation ───────────────────────────────────────────────────
+      if (rotation) pdfPg.setRotation(degrees(rotation));
 
-        // ── Text ──────────────────────────────────────────────────────
+      // ── crop (sets PDF CropBox in page user-space coords) ──────────
+      if (crop) {
+        const cx = crop.left / scale;
+        const cy = pH - (crop.top + crop.height) / scale;
+        const cw = crop.width  / scale;
+        const ch = crop.height / scale;
+        pdfPg.setCropBox(cx, cy, cw, ch);
+      }
+
+      // ── overlay objects (skip crop markers) ────────────────────────
+      for (const obj of fc.getObjects().filter(o => !o.isCropMarker)) {
+
         if (obj.type === 'i-text' || obj.type === 'text') {
-          const fontKey  = resolveFont(obj.fontFamily, obj.fontWeight, obj.fontStyle);
-          const font     = await doc.embedFont(fontKey);
-          const size     = (obj.fontSize || 14) / scale;
-          const lineH    = size * (obj.lineHeight || 1.2);
-          const lines    = (obj.text || '').split('\n');
-          const pdfX     = obj.left / scale;
-          // baseline of first line: top of box + cap-height approx
-          const pdfY0    = pH - (obj.top + obj.fontSize * 0.95) / scale;
-          const rot      = degrees(-(obj.angle || 0));
-          const color    = hexToRgb(obj.fill || '#000000');
-
+          const font  = await doc.embedFont(resolveFont(obj.fontFamily, obj.fontWeight, obj.fontStyle));
+          const size  = (obj.fontSize || 14) / scale;
+          const lineH = size * (obj.lineHeight || 1.2);
+          const lines = (obj.text || '').split('\n');
+          const pdfX  = obj.left / scale;
+          const pdfY0 = pH - (obj.top + obj.fontSize * 0.95) / scale;
+          const rot   = degrees(-(obj.angle || 0));
+          const color = hexToRgb(obj.fill || '#000000');
           lines.forEach((line, li) => {
             if (!line) return;
-            pdfPg.drawText(line, {
-              x: pdfX,
-              y: pdfY0 - li * lineH,
-              size, font, color,
-              rotate: rot,
-            });
+            pdfPg.drawText(line, { x: pdfX, y: pdfY0 - li * lineH, size, font, color, rotate: rot });
           });
         }
 
-        // ── Image ─────────────────────────────────────────────────────
         if (obj.type === 'image') {
           const src = obj.imageData || (obj._element && obj._element.src);
           if (!src || !src.startsWith('data:')) continue;
-
-          const bytes  = dataURLToBytes(src);
-          const isPNG  = src.startsWith('data:image/png');
+          const bytes = dataURLToBytes(src);
+          const isPNG = src.startsWith('data:image/png');
           let embedded;
-          try {
-            embedded = isPNG ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
-          } catch (_) {
-            try { embedded = await doc.embedPng(bytes); } catch (_) { continue; }
-          }
-
+          try { embedded = isPNG ? await doc.embedPng(bytes) : await doc.embedJpg(bytes); }
+          catch (_) { try { embedded = await doc.embedPng(bytes); } catch (_) { continue; } }
           const w = (obj.width  * obj.scaleX) / scale;
           const h = (obj.height * obj.scaleY) / scale;
           pdfPg.drawImage(embedded, {
-            x:      obj.left / scale,
-            y:      pH - (obj.top / scale) - h,
-            width:  w,
-            height: h,
+            x: obj.left / scale, y: pH - (obj.top / scale) - h,
+            width: w, height: h,
             rotate: degrees(-(obj.angle || 0)),
           });
         }
@@ -491,10 +574,7 @@ async function exportPDF() {
     });
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
-  } catch (err) {
-    alert('Export failed: ' + err.message);
-    console.error(err);
-  }
+  } catch (err) { alert('Export failed: ' + err.message); console.error(err); }
   spin(false);
 }
 
@@ -504,7 +584,6 @@ function resolveFont(family = '', weight = '', style = '') {
   const b  = weight === 'bold';
   const it = style  === 'italic' || style === 'oblique';
   const f  = family.toLowerCase();
-
   if (f.includes('times') || f.includes('georgia') || f.includes('serif')) {
     if (b && it) return StandardFonts.TimesBoldItalic;
     if (b)       return StandardFonts.TimesBold;
@@ -517,7 +596,6 @@ function resolveFont(family = '', weight = '', style = '') {
     if (it)      return StandardFonts.CourierOblique;
     return StandardFonts.Courier;
   }
-  // Helvetica / Arial / default
   if (b && it) return StandardFonts.HelveticaBoldOblique;
   if (b)       return StandardFonts.HelveticaBold;
   if (it)      return StandardFonts.HelveticaOblique;
@@ -537,7 +615,6 @@ function hexToRgb(hex) {
 function toHex(color) {
   if (!color) return '#000000';
   if (/^#[0-9a-f]{6}$/i.test(color)) return color;
-  // let browser normalize any color string to #rrggbb
   const ctx = document.createElement('canvas').getContext('2d');
   ctx.fillStyle = color;
   return ctx.fillStyle;
@@ -551,23 +628,16 @@ function dataURLToBytes(url) {
   return arr;
 }
 
-function spin(on) {
-  document.getElementById('spinner').classList.toggle('on', on);
-}
+function spin(on) { document.getElementById('spinner').classList.toggle('on', on); }
 
-function el(tag, props = {}) {
-  return Object.assign(document.createElement(tag), props);
-}
+function el(tag, props = {}) { return Object.assign(document.createElement(tag), props); }
 
-function anyEditing() {
-  return fcs.some(c => c.getObjects().some(o => o.isEditing));
-}
+function anyEditing() { return fcs.some(c => c.getObjects().some(o => o.isEditing)); }
 
 // ── keyboard shortcuts ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') setMode('select');
   if ((e.key === 'Delete' || e.key === 'Backspace') && !anyEditing()) {
-    // don't intercept when a native input is focused
     if (document.activeElement.tagName === 'INPUT' ||
         document.activeElement.tagName === 'SELECT') return;
     deleteSelected();
